@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Legendary Color Chart — Tra cứu</title>
+
+<!-- 👇 Dòng này nối tới file CSS (phần trang trí) -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Thanh tiêu đề xám full-width trên cùng -->
+<div class="titlebar">
+  <h1>Legendary Color Chart</h1>
+  <div class="count-badge">Tổng: <b id="totalCount">—</b> nguyên tố</div>
+</div>
+
+<div class="wrap">
+  <!-- Hàng: ô tìm kiếm (trái) + nút thêm màu (phải) -->
+  <div class="toolbar">
+    <div class="search"><input id="searchInput" type="text" placeholder="Tìm kiếm..."></div>
+    <button class="btn add-btn" id="addBtn">＋ Thêm màu nếu game có cập nhật</button>
+  </div>
+
+  <!-- Layout chính: grid bên trái + detail panel bên phải -->
+  <div class="main-layout">
+    <!-- Vùng đen lớn: lưới các màu (bên trái) -->
+    <div class="board">
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="emptyState" style="display:none;">
+        <div class="big">🐧</div>
+        Không tìm thấy nguyên tố nào khớp.
+      </div>
+    </div>
+
+    <!-- Panel chi tiết (bên phải) -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-content">
+        <div class="detail-gradient" id="detailGradient"></div>
+        <div class="detail-info" id="detailInfo">
+          <div class="detail-name"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal thêm/sửa -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close-x" id="closeModal">✕</button>
+    <h2 id="modalTitle">Thêm nguyên tố</h2>
+    <div class="field">
+      <label>Tên nguyên tố</label>
+      <input type="text" id="fName" placeholder="VD: Phoenix">
+    </div>
+    <div class="field">
+      <label>Màu gradient</label>
+      <div class="color-row">
+        <div class="color-field">
+          <input type="color" id="fColor1" value="#ff5fb8">
+          <input type="text" id="fColor1Text" value="#ff5fb8">
+        </div>
+        <div class="color-field">
+          <input type="color" id="fColor2" value="#7c5cff">
+          <input type="text" id="fColor2Text" value="#7c5cff">
+        </div>
+      </div>
+    </div>
+    <div class="preview-bar" id="previewBar"></div>
+    <div class="modal-actions">
+      <button class="btn danger" id="deleteBtn" style="display:none;">Xoá</button>
+      <button class="btn primary" id="saveBtn">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 👇 Dòng này nối tới file JS (phần hành vi). Luôn đặt CUỐI body -->
+<script src="script.js"></script>
+</body>
+</html>
