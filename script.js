@@ -1,5 +1,5 @@
 // ============================================
-// DỮ LIỆU GỐC — 135 nguyên tố (đã cập nhật với gradient đa-tầng)
+// SEED DATA — 135 elements
 // ============================================
 const SEED = {
     "Fire": ["#f6290c", "#fb6143"],
@@ -145,6 +145,7 @@ let state = { elements: {}, order: [], deleted: [] };
 let sortMode = 'alpha';
 let editingName = null;
 let selectedColor = null;
+let currentColorCount = 2;
 
 const grid = document.getElementById('grid');
 const searchInput = document.getElementById('searchInput');
@@ -153,6 +154,7 @@ const toastEl = document.getElementById('toast');
 const detailPanel = document.getElementById('detailPanel');
 const detailGradient = document.getElementById('detailGradient');
 const detailInfo = document.getElementById('detailInfo');
+const colorContainer = document.getElementById('colorContainer');
 
 function showToast(msg){
   toastEl.textContent = msg;
@@ -170,7 +172,7 @@ function loadData(){
       state.deleted = parsed.deleted || [];
     }
   }catch(e){
-    console.error('Không đọc được dữ liệu đã lưu:', e);
+    console.error('Error loading data:', e);
   }
   render();
 }
@@ -179,7 +181,7 @@ function persist(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }catch(e){
-    showToast('⚠️ Lỗi khi lưu, thử lại nhé');
+    showToast('⚠️ Error saving data');
   }
 }
 
@@ -202,7 +204,6 @@ function isCustom(name){
   return !SEED.hasOwnProperty(name) || state.elements.hasOwnProperty(name);
 }
 
-// Tạo gradient CSS từ mảy màu (cho detail-info)
 function createGradient(colors){
   if(!colors || colors.length === 0) return 'linear-gradient(90deg, #000, #fff)';
   if(colors.length === 1) return colors[0];
@@ -214,7 +215,6 @@ function createGradient(colors){
   return `linear-gradient(90deg, ${stops.join(', ')})`;
 }
 
-// Hàm interpolate màu (chuyển đổi từ màu A sang màu B)
 function interpolateColor(c1, c2, ratio){
   const hex2rgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -242,9 +242,8 @@ function interpolateColor(c1, c2, ratio){
 function showDetailPanel(name, colors){
   selectedColor = name;
   
-  // Tạo màu trung gian để animation mượt hơn
   const interpolatedColors = [];
-  const stepsPerSegment = 10; // Số bước giữa mỗi cặp màu
+  const stepsPerSegment = 10;
   
   for(let i = 0; i < colors.length; i++){
     interpolatedColors.push(colors[i]);
@@ -253,7 +252,6 @@ function showDetailPanel(name, colors){
       const c1 = colors[i];
       const c2 = colors[i + 1];
       
-      // Tạo màu trung gian từ c1 đến c2
       for(let step = 1; step < stepsPerSegment; step++){
         const ratio = step / stepsPerSegment;
         const interpolated = interpolateColor(c1, c2, ratio);
@@ -262,7 +260,6 @@ function showDetailPanel(name, colors){
     }
   }
   
-  // Tạo keyframes animation động
   const keyframes = interpolatedColors.map((c, i) => {
     const percent = (i / interpolatedColors.length) * 100;
     return `${percent}% { background: ${c}; }`;
@@ -273,7 +270,6 @@ function showDetailPanel(name, colors){
     100% { background: ${colors[0]}; }
   }`;
   
-  // Inject CSS động
   let style = document.getElementById('dynamicKeyframes');
   if(style) style.remove();
   style = document.createElement('style');
@@ -281,19 +277,16 @@ function showDetailPanel(name, colors){
   style.textContent = fullKeyframes;
   document.head.appendChild(style);
   
-  // Apply animation
   detailGradient.style.background = colors[0];
   detailGradient.style.animation = 'none';
   void detailGradient.offsetWidth;
   const animationName = `colorShift_${name.replace(/\s+/g, '_')}`;
-  const duration = interpolatedColors.length * 0.25; // Mỗi bước 250ms
+  const duration = interpolatedColors.length * 0.25;
   detailGradient.style.animation = `${animationName} ${duration}s steps(${interpolatedColors.length}, end) infinite`;
   
-  // Hiển thị tên với gradient
   const gradient = createGradient(colors);
   detailInfo.innerHTML = `<div class="detail-name" style="background:${gradient}; -webkit-background-clip:text; background-clip:text; color:transparent;">${escapeHtml(name)}</div>`;
   
-  // Highlight card được chọn
   document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
   const selectedCard = Array.from(document.querySelectorAll('.card')).find(card => card.dataset.name === name);
   if(selectedCard) selectedCard.classList.add('active');
@@ -327,7 +320,7 @@ function render(){
     
     const gradient = createGradient(colors);
     card.innerHTML = `
-      ${isCustom(name) ? '<div class="custom-tag">CỦA BẠN</div>' : ''}
+      ${isCustom(name) ? '<div class="custom-tag">CUSTOM</div>' : ''}
       <div class="swatch" style="background:${gradient};"></div>
       <div class="ename">${escapeHtml(name)}</div>
     `;
@@ -347,15 +340,29 @@ function escapeHtml(s){
   return d.innerHTML;
 }
 
+function renderColorInputs(colors){
+  colorContainer.innerHTML = '';
+  colors.forEach((color, idx) => {
+    const row = document.createElement('div');
+    row.className = 'color-row';
+    row.innerHTML = `
+      <div class="color-field">
+        <input type="color" class="color-picker" value="${color}" data-idx="${idx}">
+        <input type="text" class="color-hex" value="${color}" data-idx="${idx}">
+      </div>
+      ${colors.length > 2 ? `<button class="color-remove" data-idx="${idx}">Remove</button>` : ''}
+    `;
+    colorContainer.appendChild(row);
+  });
+}
+
 function openAdd(){
   editingName = null;
-  document.getElementById('modalTitle').textContent = 'Thêm nguyên tố';
+  currentColorCount = 2;
+  document.getElementById('modalTitle').textContent = 'Add Element';
   document.getElementById('fName').value = '';
-  document.getElementById('fColor1').value = '#ff5fb8';
-  document.getElementById('fColor1Text').value = '#ff5fb8';
-  document.getElementById('fColor2').value = '#7c5cff';
-  document.getElementById('fColor2Text').value = '#7c5cff';
   document.getElementById('deleteBtn').style.display = 'none';
+  renderColorInputs(['#ff5fb8', '#7c5cff']);
   updatePreview();
   overlay.classList.add('show');
   document.getElementById('fName').focus();
@@ -363,13 +370,11 @@ function openAdd(){
 
 function openEdit(name, colors){
   editingName = name;
-  document.getElementById('modalTitle').textContent = 'Sửa nguyên tố';
+  currentColorCount = colors.length;
+  document.getElementById('modalTitle').textContent = 'Edit Element';
   document.getElementById('fName').value = name;
-  document.getElementById('fColor1').value = colors[0];
-  document.getElementById('fColor1Text').value = colors[0];
-  document.getElementById('fColor2').value = colors[colors.length - 1];
-  document.getElementById('fColor2Text').value = colors[colors.length - 1];
   document.getElementById('deleteBtn').style.display = 'block';
+  renderColorInputs(colors);
   updatePreview();
   overlay.classList.add('show');
 }
@@ -379,27 +384,44 @@ function closeModal(){
 }
 
 function updatePreview(){
-  const c1 = document.getElementById('fColor1Text').value;
-  const c2 = document.getElementById('fColor2Text').value;
-  document.getElementById('previewBar').style.background = `linear-gradient(90deg, ${c1}, ${c2})`;
+  const colors = Array.from(document.querySelectorAll('.color-hex')).map(el => el.value);
+  const gradient = createGradient(colors);
+  document.getElementById('previewBar').style.background = gradient;
 }
 
-document.getElementById('fColor1').addEventListener('input', e=>{
-  document.getElementById('fColor1Text').value = e.target.value;
+document.addEventListener('input', (e) => {
+  if(e.target.classList.contains('color-picker')){
+    const idx = e.target.dataset.idx;
+    document.querySelector(`.color-hex[data-idx="${idx}"]`).value = e.target.value;
+    updatePreview();
+  }
+  if(e.target.classList.contains('color-hex')){
+    const idx = e.target.dataset.idx;
+    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)){
+      document.querySelector(`.color-picker[data-idx="${idx}"]`).value = e.target.value;
+    }
+    updatePreview();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if(e.target.classList.contains('color-remove')){
+    const idx = parseInt(e.target.dataset.idx);
+    const colors = Array.from(document.querySelectorAll('.color-hex')).map(el => el.value);
+    colors.splice(idx, 1);
+    renderColorInputs(colors);
+    updatePreview();
+  }
+});
+
+document.getElementById('addColorBtn').addEventListener('click', () => {
+  const colors = Array.from(document.querySelectorAll('.color-hex')).map(el => el.value);
+  colors.push('#000000');
+  renderColorInputs(colors);
   updatePreview();
 });
-document.getElementById('fColor2').addEventListener('input', e=>{
-  document.getElementById('fColor2Text').value = e.target.value;
-  updatePreview();
-});
-document.getElementById('fColor1Text').addEventListener('input', e=>{
-  if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('fColor1').value = e.target.value;
-  updatePreview();
-});
-document.getElementById('fColor2Text').addEventListener('input', e=>{
-  if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('fColor2').value = e.target.value;
-  updatePreview();
-});
+
+document.getElementById('fName').addEventListener('input', updatePreview);
 
 document.getElementById('addBtn').addEventListener('click', openAdd);
 document.getElementById('closeModal').addEventListener('click', closeModal);
@@ -407,12 +429,14 @@ overlay.addEventListener('click', e=>{ if(e.target === overlay) closeModal(); })
 
 document.getElementById('saveBtn').addEventListener('click', ()=>{
   const name = document.getElementById('fName').value.trim();
-  const c1 = document.getElementById('fColor1Text').value;
-  const c2 = document.getElementById('fColor2Text').value;
+  const colors = Array.from(document.querySelectorAll('.color-hex')).map(el => el.value);
 
-  if(!name){ showToast('⚠️ Nhập tên nguyên tố đã'); return; }
-  if(!/^#[0-9a-fA-F]{6}$/.test(c1) || !/^#[0-9a-fA-F]{6}$/.test(c2)){
-    showToast('⚠️ Mã màu không hợp lệ'); return;
+  if(!name){ showToast('⚠️ Enter element name'); return; }
+  if(colors.some(c => !/^#[0-9a-fA-F]{6}$/.test(c))){
+    showToast('⚠️ Invalid color code'); return;
+  }
+  if(colors.length < 2){
+    showToast('⚠️ Need at least 2 colors'); return;
   }
 
   if(editingName && editingName !== name){
@@ -423,19 +447,19 @@ document.getElementById('saveBtn').addEventListener('click', ()=>{
     state.order = state.order.filter(n=>n!==editingName);
   }
 
-  state.elements[name] = [c1, c2];
+  state.elements[name] = colors;
   if(!state.order.includes(name)) state.order.push(name);
   state.deleted = state.deleted.filter(n=>n!==name);
 
   persist();
   render();
   closeModal();
-  showToast(editingName ? '✓ Đã cập nhật' : '✓ Đã thêm nguyên tố mới');
+  showToast(editingName ? '✓ Updated' : '✓ Element added');
 });
 
 document.getElementById('deleteBtn').addEventListener('click', ()=>{
   if(!editingName) return;
-  if(!confirm(`Xoá "${editingName}" khỏi danh sách?`)) return;
+  if(!confirm(`Delete "${editingName}"?`)) return;
 
   delete state.elements[editingName];
   state.order = state.order.filter(n=>n!==editingName);
@@ -446,7 +470,7 @@ document.getElementById('deleteBtn').addEventListener('click', ()=>{
   persist();
   render();
   closeModal();
-  showToast('🗑️ Đã xoá');
+  showToast('🗑️ Deleted');
 });
 
 searchInput.addEventListener('input', render);

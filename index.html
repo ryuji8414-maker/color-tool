@@ -1,38 +1,43 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Legendary Color Chart — Tra cứu</title>
-
-<!-- 👇 Dòng này nối tới file CSS (phần trang trí) -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legendary Color Chart — Reference</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<!-- Thanh tiêu đề xám full-width trên cùng -->
+<!-- Header bar -->
 <div class="titlebar">
   <h1>Legendary Color Chart</h1>
-  <div class="count-badge">Tổng: <b id="totalCount">—</b> nguyên tố</div>
+  <div class="count-badge">Total: <b id="totalCount">—</b> elements</div>
 </div>
 
 <div class="wrap">
-  <!-- Hàng: ô tìm kiếm (trái) + nút thêm màu (phải) -->
+  <!-- Toolbar: search + add button -->
   <div class="toolbar">
-    <div class="search"><input id="searchInput" type="text" placeholder="Tìm kiếm..."></div>
-    <button class="btn add-btn" id="addBtn">＋ Thêm màu nếu game có cập nhật</button>
+    <div class="search"><input id="searchInput" type="text" placeholder="Search..."></div>
+    <button class="btn add-btn" id="addBtn">+ Add Color</button>
   </div>
 
-  <!-- Layout chính: grid bên trái + detail panel bên phải -->
+  <!-- Sort chips -->
+  <div class="sort-row">
+    <button class="chip active" data-sort="alpha">A → Z</button>
+    <button class="chip" data-sort="recent">Recent</button>
+  </div>
+
+  <!-- Main layout: grid (left) + detail panel (right) -->
   <div class="main-layout">
-    <!-- Vùng đen lớn: lưới các màu (bên trái) -->
+    <!-- Color grid (left) -->
     <div class="board">
       <div class="grid" id="grid"></div>
       <div class="empty" id="emptyState" style="display:none;">
         <div class="big">🐧</div>
-        Không tìm thấy nguyên tố nào khớp.
+        No elements found.
       </div>
     </div>
 
-    <!-- Panel chi tiết (bên phải) -->
+    <!-- Detail panel (right) -->
     <div class="detail-panel" id="detailPanel">
       <div class="detail-content">
         <div class="detail-gradient" id="detailGradient"></div>
@@ -44,39 +49,30 @@
   </div>
 </div>
 
-<!-- Modal thêm/sửa -->
+<!-- Modal for add/edit -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <button class="close-x" id="closeModal">✕</button>
-    <h2 id="modalTitle">Thêm nguyên tố</h2>
+    <h2 id="modalTitle">Add Element</h2>
     <div class="field">
-      <label>Tên nguyên tố</label>
-      <input type="text" id="fName" placeholder="VD: Phoenix">
+      <label>Element Name</label>
+      <input type="text" id="fName" placeholder="e.g. Phoenix">
     </div>
     <div class="field">
-      <label>Màu gradient</label>
-      <div class="color-row">
-        <div class="color-field">
-          <input type="color" id="fColor1" value="#ff5fb8">
-          <input type="text" id="fColor1Text" value="#ff5fb8">
-        </div>
-        <div class="color-field">
-          <input type="color" id="fColor2" value="#7c5cff">
-          <input type="text" id="fColor2Text" value="#7c5cff">
-        </div>
-      </div>
+      <label>Colors (Hex codes)</label>
+      <div id="colorContainer"></div>
+      <button class="btn" id="addColorBtn" style="width:100%; margin-top:10px;">+ Add Color</button>
     </div>
     <div class="preview-bar" id="previewBar"></div>
     <div class="modal-actions">
-      <button class="btn danger" id="deleteBtn" style="display:none;">Xoá</button>
-      <button class="btn primary" id="saveBtn">Lưu</button>
+      <button class="btn danger" id="deleteBtn" style="display:none;">Delete</button>
+      <button class="btn primary" id="saveBtn">Save</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- 👇 Dòng này nối tới file JS (phần hành vi). Luôn đặt CUỐI body -->
 <script src="script.js"></script>
 </body>
 </html>
